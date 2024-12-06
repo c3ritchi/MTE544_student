@@ -38,7 +38,8 @@ show_plot = True
 
 # When set to false, you can run this script stand-alone, it will use the information specified in main
 # When set to true, you are expected to use this with the stack and the specified map
-use_map = True
+# NOTE: remember this upon running
+use_map = False
 
 def prm_graph(start, goal, obstacles_list, robot_radius, *, rng=None, m_utilities=None):
     """
