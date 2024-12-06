@@ -47,7 +47,11 @@ class planner:
         # [Part 3] TODO Use the PRM and search_PRM to generate the path
         # Hint: see the example of the ASTAR case below, there is no scaling factor for PRM
         if type == PRM_PLANNER:
-            ...
+            
+            # turtlebot3 burger is 138x178x192mm (l,w,h)
+            sample_points, road_map = prm_graph(start=startPose, goal=endPose, obstacles_list=self.obstaclesListCell, robot_radius=0.18, m_utilities=self.m_utilities)
+
+            path_ = search_PRM(points=sample_points, prm=road_map, start=startPose, end=endPose)
 
         elif type == ASTAR_PLANNER: # This is the same planner you should have implemented for Lab4
             scale_factor = 4 # Depending on resolution, this can be smaller or larger

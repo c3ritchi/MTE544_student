@@ -32,14 +32,14 @@ from mapUtilities import *
 # Parameters of PRM
 N_SAMPLE = 800  # number of sample_points
 N_KNN = 10  # number of edge from one sampled point (one node)
-MAX_EDGE_LEN = 3  # Maximum edge length, in [m]
+MAX_EDGE_LEN = 5  # Maximum edge length, in [m]
 
 show_plot = True
 
 # When set to false, you can run this script stand-alone, it will use the information specified in main
 # When set to true, you are expected to use this with the stack and the specified map
 # NOTE: remember this upon running
-use_map = False
+use_map = True
 
 def prm_graph(start, goal, obstacles_list, robot_radius, *, rng=None, m_utilities=None):
     """
@@ -65,8 +65,8 @@ def prm_graph(start, goal, obstacles_list, robot_radius, *, rng=None, m_utilitie
         # [Part 2] TODO The radius of the robot and the maximum edge lengths are given in [m], but the map is given in cell positions.
         # Therefore, when using the map, the radius and edge length need to be adjusted for the resolution of the cell positions
         # Hint: in the map utilities there is the resolution stored
-        robot_radius = ...
-        max_edge_len = ...
+        robot_radius = robot_radius/m_utilities.getResolution()
+        max_edge_len = max_edge_len/m_utilities.getResolution()
 
     # Get sample data
     sample_points = generate_sample_points(start, goal,
@@ -158,11 +158,26 @@ def generate_sample_points(start, goal, rr, obstacles_list, obstacle_kd_tree, rn
 
     sample_x, sample_y = [], []
 
+    # determine the bounds of the map free space
+    min_x = np.min(ox)
+    max_x = np.max(ox)
+    min_y = np.min(oy)
+    max_y = np.max(oy)
+
     while len(sample_x) <= N_SAMPLE:
-        ...
+        x_possible = rng.uniform(min_x, max_x)
+        y_possible = rng.uniform(min_y, max_y)
+
+        # looks around the possible node to see if there are any points obstacle set within the range
+        if len(obstacle_kd_tree.query_ball_point((x_possible, y_possible), r=rr)) == 0:
+            sample_x.append(x_possible)
+            sample_y.append(y_possible)
     
     # [Part 2] TODO Add also the start and goal to the samples so that they are connected to the roadmap
-    ...
+    sample_x.append(sx)
+    sample_y.append(sy)
+    sample_x.append(gx)
+    sample_y.append(gy)
 
     return [sample_x, sample_y]
 
@@ -188,7 +203,23 @@ def is_collision(sx, sy, gx, gy, rr, obstacle_kd_tree, max_edge_len):
     # [Part 2] TODO Check where there would be a collision with an obstacle between two nodes at sx,sy and gx,gy, and wether the edge between the two nodes is greater than max_edge_len
     # Hint: you may leverage on the query function of KDTree
     
-    ...
+    node_dist = math.sqrt((gx-sx)**2 + (gy-sy)**2)
+    if node_dist > max_edge_len:
+        return True
+    
+    # need to make discrete list of points along the potential edge
+    # NOTE decreasing 0.1 may be necessary to generate a finer edge check
+    num_points = int(abs(gx-sx)/0.1)
+    # y = mx+b
+    m = (gy-sy)/(gx-sx)
+    b = gy - m*gx
+    for i in range(num_points):
+        step = (gx-sx)/num_points*i
+        x = sx+step
+        y = m*x+b
+
+        if obstacle_kd_tree.query((x, y), k=1)[0] <= rr:
+            return True
 
     return False  # No collision
 
@@ -223,7 +254,21 @@ def generate_road_map(sample_points, rr, obstacle_kd_tree, max_edge_len, m_utili
     #[Part 2] TODO Generate roadmap for all sample points, i.e. create the edges between nodes (sample points)
     # Note: use the is_collision function to check for possible collisions (do not make an edge if there is collision)
     # Hint: you may ceate a KDTree object to help with the generation of the roadmap, but other methods also work
-    ...
+    node_tree = KDTree(list(zip(sample_x, sample_y)))
+
+    # have to init the road map as an empty 2d array
+    road_map = [[] for _ in range(n_sample)]
+
+    for i in range(n_sample):
+        # N_KNN nearest neighbor's indices
+        distances, indices = node_tree.query([sample_x[i], sample_y[i]], k=N_KNN + 1)
+        
+        for j in range(1, N_KNN + 1):  # cannot use first indice, is the sample and should not have edge to itself
+            neighbor_index = indices[j]
+            
+            # check collisions for sample's given neighbour
+            if not is_collision(sample_x[i], sample_y[i], sample_x[neighbor_index], sample_y[neighbor_index], rr, obstacle_kd_tree, max_edge_len):
+                road_map[i].append(neighbor_index)
 
     return road_map
 
