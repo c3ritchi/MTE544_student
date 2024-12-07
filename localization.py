@@ -68,14 +68,20 @@ class localization(Node):
                         0,
                         0])        
 
-            Q=0.1*np.eye(6)
-            R=0.4*np.eye(4)
+            # kalman filters are not useful in simulations unless there is noise injected somehow
+            # raw sensor data = close to perfect, so Q and R --> small
+            # in the real world, Q=1 and R=1.5 seemed to yield the best results
+            Q=0.000000001*np.eye(6)
+            R=0.000000001*np.eye(4)
             P=Q.copy()
             
             self.kf=kalman_filter(P,Q,R, x)
             self.kalmanInitialized = True
+
+            self.last_stamp = imu_msg.header.stamp
         
-        dt = time.time() - self.timelast
+        dt = (imu_msg.header.stamp.sec + imu_msg.header.stamp.nanosec * 1e-9) - (self.last_stamp.sec + self.last_stamp.nanosec * 1e-9)
+        self.last_stamp = imu_msg.header.stamp
 
         self.timelast=time.time()
 

@@ -29,10 +29,14 @@ import matplotlib.pyplot as plt
 from scipy.spatial import KDTree
 from mapUtilities import *
 
+# NOTE important for graph completeness
+# more computationally intensive to check edges. conclusion: more points, fewer, smaller edges
+# this causes some weird choices, due to prior mapping issues and the randomness of the point selection.
+# most optimal path is rarely selected if there is an excess of points ironically. 
 # Parameters of PRM
-N_SAMPLE = 1000  # number of sample_points
-N_KNN = 12  # number of edge from one sampled point (one node)
-MAX_EDGE_LEN = 5  # Maximum edge length, in [m]
+N_SAMPLE = 1500  # number of sample_points
+N_KNN = 7  # number of edge from one sampled point (one node)
+MAX_EDGE_LEN = 3  # Maximum edge length, in [m]
 
 show_plot = True
 
