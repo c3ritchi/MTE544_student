@@ -30,8 +30,8 @@ from scipy.spatial import KDTree
 from mapUtilities import *
 
 # Parameters of PRM
-N_SAMPLE = 800  # number of sample_points
-N_KNN = 10  # number of edge from one sampled point (one node)
+N_SAMPLE = 1000  # number of sample_points
+N_KNN = 12  # number of edge from one sampled point (one node)
 MAX_EDGE_LEN = 5  # Maximum edge length, in [m]
 
 show_plot = True
@@ -85,7 +85,7 @@ def prm_graph(start, goal, obstacles_list, robot_radius, *, rng=None, m_utilitie
             # When using the map, first convert cells into positions, then plot (for a more intuitive visualization)
             # Plot the sample points
             samples_pos = np.array([m_utilities.cell_2_position([i, j]) for i, j in zip(sample_points[0], sample_points[1])])
-            print(samples_pos)
+            # print(samples_pos)
             sample_x = samples_pos[:, 0]
             sample_y = samples_pos[:, 1]
             plt.plot(sample_x, sample_y, ".b")   
@@ -209,14 +209,12 @@ def is_collision(sx, sy, gx, gy, rr, obstacle_kd_tree, max_edge_len):
     
     # need to make discrete list of points along the potential edge
     # NOTE decreasing 0.1 may be necessary to generate a finer edge check
-    num_points = int(abs(gx-sx)/0.1)
-    # y = mx+b
-    m = (gy-sy)/(gx-sx)
-    b = gy - m*gx
+    num_points = int(node_dist/0.1)
+
     for i in range(num_points):
-        step = (gx-sx)/num_points*i
-        x = sx+step
-        y = m*x+b
+        rate = i / num_points
+        x = sx + rate * (gx - sx)
+        y = sy + rate * (gy - sy)
 
         if obstacle_kd_tree.query((x, y), k=1)[0] <= rr:
             return True
