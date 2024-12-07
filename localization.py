@@ -27,7 +27,7 @@ odom_qos=QoSProfile(reliability=2, durability=2, history=1, depth=10)
 
 class localization(Node):
     
-    def __init__(self, type, loggerName="robotPose.csv", loggerHeaders=["imu_ax", "imu_ay", "kf_ax", "kf_ay","kf_vx","kf_w","kf_x", "kf_y","stamp"]):
+    def __init__(self, type, loggerName="robotPose.csv", loggerHeaders=["odom_x", "odom_y", "imu_ax", "imu_ay", "kf_ax", "kf_ay","kf_vx","kf_w","kf_x", "kf_y","stamp"]):
 
         super().__init__("localizer")
        
@@ -84,7 +84,7 @@ class localization(Node):
                     odom_msg.twist.twist.angular.z,
                     imu_msg.linear_acceleration.x,
                     imu_msg.linear_acceleration.y])
-        print(dt)
+        #print(dt)
         self.kf.predict(dt)
         self.kf.update(z)
         
@@ -96,9 +96,9 @@ class localization(Node):
                             odom_msg.header.stamp])
         
         
-        self.loc_logger.log_values([z[2], z[3], xhat[5], xhat[4]*xhat[3], xhat[4], xhat[3], xhat[0], xhat[1], Time.from_msg(imu_msg.header.stamp).nanoseconds])
+        self.loc_logger.log_values([odom_msg.pose.pose.position.x, odom_msg.pose.pose.position.y, z[2], z[3], xhat[5], xhat[4]*xhat[3], xhat[4], xhat[3], xhat[0], xhat[1], Time.from_msg(imu_msg.header.stamp).nanoseconds])
         
-        print(f"{xhat[0]} and {xhat[1]} vs {odom_msg.pose.pose.position.x} vs {odom_msg.pose.pose.position.y}")
+        #print(f"{xhat[0]} and {xhat[1]} vs {odom_msg.pose.pose.position.x} vs {odom_msg.pose.pose.position.y}")
     def odom_callback(self, pose_msg):
         
         self.pose=[ pose_msg.pose.pose.position.x,
