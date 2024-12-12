@@ -72,10 +72,10 @@ class localization(Node):
             # raw sensor data = close to perfect, so Q and R --> small
             # in the real world, Q=1 and R=1.5 seemed to yield the best results
             # Q=0.000000001*np.eye(6)
-            # R=0.000000001*np.eye(4)
+            R=0.000000001*np.eye(4)
             
             Q=1*np.eye(6)
-            R=0.001*np.eye(4)
+            # R=0.00001*np.eye(4)
             P=Q.copy()
             
             self.kf=kalman_filter(P,Q,R, x)
